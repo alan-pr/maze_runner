@@ -10,16 +10,20 @@ LEFT    = "left"
 RIGHT   = "right"
 UP      = "up"
 DOWN    = "down"
+TILE_WIDTH = 16
+TILE_HEIGHT = 16
+PLAYER_WIDTH = 8
+PLAYER_SPEED = 5
 
 
 # Classes
 class Wall:
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, solid=False):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.dimensions = (x, y, width, height)
+        self.solid = False
 
     def rect(self):
         return pygame.Rect(self.x, self.y, self.width, self.height)
@@ -30,42 +34,55 @@ class Maze:
         self.window = window
         self.x = x
         self.y = y
-        self.rows = len(template)
-        self.columns = len(template[0])
+        self.rows = len(template["maze"])
+        self.columns = len(template["maze"][0])
         self.wall_width = wall_width
         self.wall_height = wall_height
-        self.template = template
+        self.template = template["maze"]
+        self.tiles_map = template["tiles"]
         self._init_maze()
 
     def _init_maze(self):
         self.maze = []
+        self.tiles = []
         for i in range(self.rows):
             self.maze.append([])
             for j in range(self.columns):
-                wall = None
+                wall = Wall(
+                    self.y + (j * self.wall_height),
+                    self.x + (i * self.wall_width),
+                    self.wall_width,
+                    self.wall_height
+                )
                 if self.template[i][j] > 0:
-                    wall = Wall(
-                        self.y + (j * self.wall_height),
-                        self.x + (i * self.wall_width),
-                        self.wall_width,
-                        self.wall_height
-                    )
+                    wall.solid = True
                 self.maze[i].append(wall)
+        tile_earth = self.get_tile(1, 0)
+        tile_stone = self.get_tile(1, 8)
+        self.tiles.append(tile_earth)
+        self.tiles.append(tile_stone)
 
     def draw(self):
             for i in range(self.rows):
                 for j in range(self.columns):
-                    if self.maze[i][j] is not None:
-                        pygame.draw.rect(self.window, BLACK, self.maze[i][j].dimensions, 0)
+                    if self.maze[i][j].solid:
+                        pygame.draw.rect(self.window, BLACK, self.maze[i][j].rect(), 1)
+                    self.window.blit(self.tiles[self.template[i][j]], self.maze[i][j].rect().topleft)
 
     def check_collision(self, rect):
         for i in range(self.rows):
             for j in range(self.columns):
                 if self.maze[i][j] is None:
                     continue
-                if self.maze[i][j].rect().colliderect(rect):
+                if self.maze[i][j].rect().colliderect(rect) and self.maze[i][j].solid:
                     return True
         return False
+
+    def get_tile(self, x, y):
+        tile_set = pygame.image.load(self.tiles_map).convert_alpha()
+        rect = pygame.Rect(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT)
+        tile = tile_set.subsurface(rect).copy()
+        return tile
 
 
 
@@ -74,8 +91,8 @@ class Player:
         self.window = window
         self.x = x
         self.y = y
-        self.width = 10
-        self.speed = 5
+        self.width = PLAYER_WIDTH
+        self.speed = PLAYER_SPEED
         self.moving = False
 
     def move(self, direction, maze):
@@ -112,12 +129,12 @@ def main():
     GAME_CLOCK = pygame.time.Clock()
     WINDOW = pygame.display.set_mode((800, 800))
     pygame.display.set_caption("Maze Runner")
-    maze = Maze(WINDOW, 0, 0, 20, 20, MAZE_TEMPLATE_00)
-    player = Player(WINDOW, 225, 0)
+    maze = Maze(WINDOW, 0, 0, TILE_WIDTH, TILE_HEIGHT, MAZE_TEMPLATE_00)
+    player = Player(WINDOW, 176, 0)
     player_directions = []
 
     while True:
-        WINDOW.fill(WHITE)
+        WINDOW.fill(BLACK)
         maze.draw()
         player.draw()
 
