@@ -56,7 +56,7 @@ class Maze:
             for i in range(self.rows):
                 for j in range(self.columns):
                     if self.maze[i][j] is not None:
-                        pygame.draw.rect(self.window, BLACK, self.maze[i][j].dimensions, 1)
+                        pygame.draw.rect(self.window, BLACK, self.maze[i][j].dimensions, 0)
 
     def check_collision(self, rect):
         for i in range(self.rows):
@@ -110,10 +110,10 @@ def main():
     pygame.init()
     FPS = 30
     GAME_CLOCK = pygame.time.Clock()
-    WINDOW = pygame.display.set_mode((500, 500))
+    WINDOW = pygame.display.set_mode((800, 800))
     pygame.display.set_caption("Maze Runner")
     maze = Maze(WINDOW, 0, 0, 20, 20, MAZE_TEMPLATE_00)
-    player = Player(WINDOW, 25, 0)
+    player = Player(WINDOW, 225, 0)
     player_directions = []
 
     while True:
